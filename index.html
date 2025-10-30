@@ -803,7 +803,10 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:5000/api/waitlist';
+        // Auto-detect API URL based on environment
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:5000/api/waitlist'
+            : '/api/waitlist';
         
         // Fetch and update waitlist count
         async function fetchCount() {
