@@ -1,10 +1,11 @@
 const { Resend } = require('resend');
+const { kv } = require('@vercel/kv');
 
 // Initialize Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Simple in-memory storage for waitlist (resets on each deployment)
-let waitlistEmails = new Set();
+// Use Vercel KV for persistent storage (no resets!)
+// Format: Set of email addresses stored as array
 
 module.exports = async (req, res) => {
   // Enable CORS
@@ -17,9 +18,15 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  // GET /api/waitlist/count - Get waitlist count
+  // GET /api/waitlist/count - Get waitlist count from KV
   if (req.method === 'GET' && req.url.includes('/count')) {
-    return res.json({ count: waitlistEmails.size });
+    try {
+      const emails = await kv.get('waitlist_emails') || [];
+      return res.json({ count: emails.length });
+    } catch (error) {
+      console.error('KV get error:', error);
+      return res.json({ count: 0 });
+    }
   }
 
   // POST /api/waitlist - Add to waitlist
@@ -31,9 +38,14 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Invalid input' });
     }
 
-    // Check if email already registered
-    if (waitlistEmails.has(email.toLowerCase())) {
-      return res.status(409).json({ error: 'Email already on waitlist' });
+    // Check if email already registered in KV
+    try {
+      const emails = await kv.get('waitlist_emails') || [];
+      if (emails.includes(email.toLowerCase())) {
+        return res.status(409).json({ error: 'Email already on waitlist' });
+      }
+    } catch (error) {
+      console.error('KV check error:', error);
     }
 
     try {
@@ -91,9 +103,15 @@ module.exports = async (req, res) => {
 
       console.log('✅ Welcome email sent to:', email);
 
-      // Add email to in-memory storage
-      waitlistEmails.add(email.toLowerCase());
-      console.log('📊 Total waitlist count:', waitlistEmails.size);
+      // Add email to Vercel KV persistent storage
+      try {
+        const emails = await kv.get('waitlist_emails') || [];
+        emails.push(email.toLowerCase());
+        await kv.set('waitlist_emails', emails);
+        console.log('📊 Total waitlist count:', emails.length);
+      } catch (kvError) {
+        console.error('KV save error:', kvError);
+      }
       
       return res.json({ success: true });
     } catch (err) {
