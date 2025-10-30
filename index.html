@@ -714,7 +714,7 @@
                     </button>
 
                     <!-- Waitlist Count - No auto-refresh to prevent glitches -->
-                    <div class="waitlist-info">
+                    <div class="waitlist-info" style="opacity: 1; transition: opacity 0.3s ease;">
                         <span class="count-number" id="count-display">0</span>
                         <span class="count-text" id="count-text">people on the waitlist</span>
                     </div>
@@ -811,21 +811,30 @@
         async function fetchCount() {
             try {
                 const response = await fetch(`${API_URL}/count`);
+                if (!response.ok) {
+                    console.warn('Count API returned error, using 0');
+                    updateCountDisplay(0);
+                    return;
+                }
                 const data = await response.json();
-                updateCountDisplay(data.count);
+                updateCountDisplay(data.count || 0);
             } catch (error) {
-                console.error('Failed to fetch count:', error);
-                // Keep showing 0 if fetch fails
+                console.warn('Failed to fetch count, using 0:', error.message);
+                // Silently keep showing 0 if fetch fails
+                updateCountDisplay(0);
             }
         }
 
-        // Update count display
+        // Update count display (smooth, no flicker)
         function updateCountDisplay(count) {
             const countDisplay = document.getElementById('count-display');
             const countText = document.getElementById('count-text');
             if (countDisplay && countText) {
-                countDisplay.textContent = count;
-                countText.textContent = count === 1 ? 'person on the waitlist' : 'people on the waitlist';
+                // Use requestAnimationFrame to prevent layout thrashing
+                requestAnimationFrame(() => {
+                    countDisplay.textContent = count;
+                    countText.textContent = count === 1 ? 'person on the waitlist' : 'people on the waitlist';
+                });
             }
         }
 
