@@ -1,0 +1,7 @@
+{
+  "name": "portnix-api",
+  "version": "1.0.0",
+  "dependencies": {
+    "resend": "^6.3.0"
+  }
+}

@@ -98,6 +98,11 @@ app.get('/api/waitlist/count', (req, res) => {
   res.json({ count: waitlistEmails.size });
 });
 
-// Start server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+// Start server (for local development)
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+}
+
+// Export for Vercel serverless function
+module.exports = app;
