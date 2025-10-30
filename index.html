@@ -570,9 +570,26 @@
 
         /* ===== RESPONSIVE: Mobile Styles (768px and below) ===== */
         @media (max-width: 768px) {
+            /* Enable scrolling on mobile */
+            html, body {
+                height: auto;
+                overflow: auto;
+            }
+
+            body {
+                display: block;
+            }
+
+            .main-content {
+                padding: 2rem 1.5rem;
+                min-height: auto;
+                overflow: visible;
+            }
+
             /* ===== RESPONSIVE: Header adjustments ===== */
             .header {
                 padding: 1rem 1.5rem;
+                position: relative;
             }
 
             /* ===== UPDATED: Keep all social links visible on mobile (no hiding) ===== */
@@ -657,6 +674,11 @@
             }
 
             /* Footer responsive */
+            .footer {
+                position: relative;
+                margin-top: 2rem;
+            }
+
             .footer-content {
                 flex-direction: column;
                 text-align: center;
