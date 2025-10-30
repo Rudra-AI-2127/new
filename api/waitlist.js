@@ -1,10 +1,37 @@
 const { Resend } = require('resend');
+const { put, head } = require('@vercel/blob');
 
 // Initialize Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Simple in-memory counter (resets on redeploy, but emails always work!)
-let waitlistEmails = new Set();
+// Helper functions for Vercel Blob storage
+async function getEmails() {
+  try {
+    const blob = await head('waitlist-emails');
+    if (blob) {
+      const response = await fetch(blob.url);
+      const data = await response.json();
+      return new Set(data.emails || []);
+    }
+  } catch (error) {
+    console.log('No existing waitlist found, starting fresh');
+  }
+  return new Set();
+}
+
+async function saveEmails(emailSet) {
+  try {
+    const emails = Array.from(emailSet);
+    await put('waitlist-emails', JSON.stringify({ emails }), {
+      access: 'public',
+      addRandomSuffix: false
+    });
+    return true;
+  } catch (error) {
+    console.error('Failed to save emails:', error.message);
+    return false;
+  }
+}
 
 module.exports = async (req, res) => {
   // Enable CORS
@@ -17,9 +44,15 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  // GET /api/waitlist/count - Simple in-memory count
+  // GET /api/waitlist/count - Get count from Vercel Blob
   if (req.method === 'GET' && req.url.includes('/count')) {
-    return res.json({ count: waitlistEmails.size });
+    try {
+      const emails = await getEmails();
+      return res.json({ count: emails.size });
+    } catch (error) {
+      console.error('Error fetching count:', error);
+      return res.json({ count: 0 });
+    }
   }
 
   // POST /api/waitlist - Add to waitlist
@@ -31,6 +64,9 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Invalid input' });
     }
 
+    // Get existing emails from blob storage
+    const waitlistEmails = await getEmails();
+    
     // Check if email already registered
     if (waitlistEmails.has(email.toLowerCase())) {
       return res.status(409).json({ error: 'Email already on waitlist' });
@@ -91,8 +127,9 @@ module.exports = async (req, res) => {
 
       console.log('✅ Welcome email sent to:', email);
 
-      // Add to in-memory storage
+      // Add to waitlist and save to blob storage
       waitlistEmails.add(email.toLowerCase());
+      await saveEmails(waitlistEmails);
       console.log('📊 Current count:', waitlistEmails.size);
       
       return res.json({ success: true });

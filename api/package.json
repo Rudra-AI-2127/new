@@ -2,6 +2,7 @@
   "name": "portnix-api",
   "version": "1.0.0",
   "dependencies": {
-    "resend": "^6.3.0"
+    "resend": "^6.3.0",
+    "@vercel/blob": "^0.20.0"
   }
 }
