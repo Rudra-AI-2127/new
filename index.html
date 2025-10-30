@@ -468,6 +468,61 @@
             display: none;
         }
 
+        .modal-title.hidden {
+            display: none;
+        }
+
+        .modal-subtitle.hidden {
+            display: none;
+        }
+
+        .success-message.hidden {
+            display: none;
+        }
+
+        /* Footer Styles */
+        .footer {
+            border-top: 1px solid #222;
+            padding: 2rem 1.5rem;
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .footer-content p {
+            color: #666;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .footer-links {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .footer-link {
+            color: #999;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .footer-link:hover {
+            color: #fff;
+        }
+
+        .footer-link i {
+            font-size: 1.1rem;
+        }
+
         /* ===== RESPONSIVE: Tablet Styles (1024px and below) ===== */
         @media (max-width: 1024px) {
             .container {
@@ -591,6 +646,17 @@
 
             .count-text {
                 font-size: 0.85rem;
+            }
+
+            /* Footer responsive */
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+            }
+
+            .footer-links {
+                gap: 1.5rem;
             }
         }
 
@@ -732,6 +798,20 @@
             </section>
         </div>
     </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2024 Portnix. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#" class="footer-link">Privacy Policy</a>
+                <a href="#" class="footer-link">Terms of Service</a>
+                <a href="#" class="footer-link" title="X">
+                    <i class="ri-twitter-x-line"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
 
     <!-- Waitlist Modal -->
     <div class="modal-overlay hidden" id="modal-overlay" onclick="if(event.target === this) closeModal()">
