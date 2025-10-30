@@ -712,6 +712,12 @@
                     <button class="cta-button" onclick="openModal()">
                         Join Waitlist
                     </button>
+
+                    <!-- Waitlist Count - No auto-refresh to prevent glitches -->
+                    <div class="waitlist-info">
+                        <span class="count-number" id="count-display">0</span>
+                        <span class="count-text" id="count-text">people on the waitlist</span>
+                    </div>
                 </div>
 
                 <!-- Decorative Elements -->
@@ -800,6 +806,28 @@
         const API_URL = window.location.hostname === 'localhost' 
             ? 'http://localhost:5000/api/waitlist'
             : '/api/waitlist';
+        
+        // Fetch waitlist count (called once on load, and after signup - NO auto-refresh)
+        async function fetchCount() {
+            try {
+                const response = await fetch(`${API_URL}/count`);
+                const data = await response.json();
+                updateCountDisplay(data.count);
+            } catch (error) {
+                console.error('Failed to fetch count:', error);
+                // Keep showing 0 if fetch fails
+            }
+        }
+
+        // Update count display
+        function updateCountDisplay(count) {
+            const countDisplay = document.getElementById('count-display');
+            const countText = document.getElementById('count-text');
+            if (countDisplay && countText) {
+                countDisplay.textContent = count;
+                countText.textContent = count === 1 ? 'person on the waitlist' : 'people on the waitlist';
+            }
+        }
 
         // Open modal
         function openModal() {
@@ -859,6 +887,9 @@
                 // Show success state
                 showSuccess();
                 
+                // Update count after successful signup
+                fetchCount();
+                
                 // Close modal after 2 seconds
                 setTimeout(() => {
                     closeModal();
@@ -915,6 +946,9 @@
                 closeModal();
             }
         });
+
+        // Fetch count once on page load (NO auto-refresh to prevent glitches)
+        fetchCount();
     </script>
 </body>
 </html>
