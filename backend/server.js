@@ -5,7 +5,7 @@ require('dotenv').config();
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors({ origin: "*" }));
 
 // MongoDB schema/model
 const WaitlistEntry = mongoose.model('WaitlistEntry', new mongoose.Schema({
@@ -16,8 +16,8 @@ const WaitlistEntry = mongoose.model('WaitlistEntry', new mongoose.Schema({
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
-.then(() => console.log('MongoDB connected'))
-.catch((err) => console.error('MongoDB Error:', err));
+  .then(() => console.log('✅ MongoDB connected'))
+  .catch((err) => console.error('❌ MongoDB Error:', err));
 
 // ===== ENDPOINT 1: Add to waitlist =====
 app.post('/api/waitlist', async (req, res) => {
@@ -25,6 +25,7 @@ app.post('/api/waitlist', async (req, res) => {
   if (!name || !email || typeof name !== 'string' || typeof email !== 'string' || !email.includes('@')) {
     return res.status(400).json({ error: 'Invalid input' });
   }
+
   try {
     const exists = await WaitlistEntry.findOne({ email });
     if (exists) return res.status(409).json({ error: 'Email already on waitlist' });
@@ -45,5 +46,6 @@ app.get('/api/waitlist/count', async (req, res) => {
   }
 });
 
+// Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log('Server running on ' + PORT));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
