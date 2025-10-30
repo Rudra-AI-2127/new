@@ -3,8 +3,8 @@ const { Resend } = require('resend');
 // Initialize Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Audience ID for Resend Contacts (you'll need to create this in Resend dashboard)
-const AUDIENCE_ID = process.env.RESEND_AUDIENCE_ID || 'default';
+// Simple in-memory storage for waitlist (resets on each deployment)
+let waitlistEmails = new Set();
 
 module.exports = async (req, res) => {
   // Enable CORS
@@ -17,18 +17,9 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  // GET /api/waitlist/count - Get waitlist count from Resend Contacts
+  // GET /api/waitlist/count - Get waitlist count
   if (req.method === 'GET' && req.url.includes('/count')) {
-    try {
-      // Try to get contacts from Resend
-      const contacts = await resend.contacts.list({ audienceId: AUDIENCE_ID });
-      const count = contacts?.data?.length || 0;
-      return res.json({ count });
-    } catch (error) {
-      console.error('Error fetching count:', error);
-      // Return 0 if there's an error (audience not set up yet)
-      return res.json({ count: 0 });
-    }
+    return res.json({ count: waitlistEmails.size });
   }
 
   // POST /api/waitlist - Add to waitlist
@@ -40,21 +31,12 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Invalid input' });
     }
 
-    try {
-      // Check if contact already exists in Resend
-      try {
-        const existingContacts = await resend.contacts.list({ audienceId: AUDIENCE_ID });
-        const exists = existingContacts?.data?.some(contact => 
-          contact.email.toLowerCase() === email.toLowerCase()
-        );
-        if (exists) {
-          return res.status(409).json({ error: 'Email already on waitlist' });
-        }
-      } catch (checkError) {
-        // If audience doesn't exist yet, continue (we'll create contact anyway)
-        console.log('Audience check skipped:', checkError.message);
-      }
+    // Check if email already registered
+    if (waitlistEmails.has(email.toLowerCase())) {
+      return res.status(409).json({ error: 'Email already on waitlist' });
+    }
 
+    try {
       // Send welcome email via Resend
       console.log('📧 Attempting to send email to:', email);
       
@@ -109,19 +91,9 @@ module.exports = async (req, res) => {
 
       console.log('✅ Welcome email sent to:', email);
 
-      // Add contact to Resend audience for persistent storage
-      try {
-        await resend.contacts.create({
-          audienceId: AUDIENCE_ID,
-          email: email,
-          firstName: name,
-          unsubscribed: false,
-        });
-        console.log('✅ Contact added to Resend audience');
-      } catch (contactError) {
-        // Log but don't fail if contact creation fails
-        console.error('⚠️ Contact creation error:', contactError.message);
-      }
+      // Add email to in-memory storage
+      waitlistEmails.add(email.toLowerCase());
+      console.log('📊 Total waitlist count:', waitlistEmails.size);
       
       return res.json({ success: true });
     } catch (err) {
