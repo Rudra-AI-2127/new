@@ -712,12 +712,6 @@
                     <button class="cta-button" onclick="openModal()">
                         Join Waitlist
                     </button>
-
-                    <!-- Waitlist Count - Real-time Updates -->
-                    <div class="waitlist-info">
-                        <span class="count-number" id="count-display">0</span>
-                        <span class="count-text" id="count-text">people on the waitlist</span>
-                    </div>
                 </div>
 
                 <!-- Decorative Elements -->
@@ -806,24 +800,6 @@
         const API_URL = window.location.hostname === 'localhost' 
             ? 'http://localhost:5000/api/waitlist'
             : '/api/waitlist';
-        
-        // Fetch and update waitlist count
-        async function fetchCount() {
-            try {
-                const response = await fetch(`${API_URL}/count`);
-                const data = await response.json();
-                updateCountDisplay(data.count);
-            } catch (error) {
-                console.error('Failed to fetch count:', error);
-            }
-        }
-
-        // Update count display
-        function updateCountDisplay(count) {
-            document.getElementById('count-display').textContent = count;
-            const countText = count === 1 ? 'person on the waitlist' : 'people on the waitlist';
-            document.getElementById('count-text').textContent = countText;
-        }
 
         // Open modal
         function openModal() {
@@ -883,9 +859,6 @@
                 // Show success state
                 showSuccess();
                 
-                // Update count
-                fetchCount();
-
                 // Close modal after 2 seconds
                 setTimeout(() => {
                     closeModal();
@@ -942,10 +915,6 @@
                 closeModal();
             }
         });
-
-        // Fetch initial count and refresh every 3 seconds
-        fetchCount();
-        setInterval(fetchCount, 3000);
     </script>
 </body>
 </html>
